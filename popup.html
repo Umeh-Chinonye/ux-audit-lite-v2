@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+   <title>UX Audit Lite</title>
+   <link rel="stylesheet" href="popup.css" />
+ </head>
+ <body>
+   <header class="header">
+     <div class="header__top">
+       <div class="header__brand">
+         <img src="../icons/icon48.png" alt="" class="header__icon" width="28" height="28" />
+         <div>
+           <h1 class="header__title">UX Audit Lite</h1>
+           <p class="header__subtitle" id="page-title">Reviewing this page…</p>
+         </div>
+       </div>
+     </div>
+     <nav class="tabs" aria-label="Extension sections">
+       <button type="button" id="tab-audit" class="tab tab--active" data-panel="audit">Audit</button>
+       <button type="button" id="tab-history" class="tab" data-panel="history">History</button>
+     </nav>
+     <div class="header__actions">
+       <button type="button" id="btn-run-audit" class="btn-primary">Run Audit</button>
+     </div>
+   </header>
+
+
+   <!-- Loading state -->
+   <section id="state-loading" class="state state--loading">
+     <div class="spinner" aria-hidden="true"></div>
+     <p>Taking a look at this page…</p>
+   </section>
+
+
+   <!-- Error state -->
+   <section id="state-error" class="state state--error hidden">
+     <p class="state__heading">Unable to audit this page</p>
+     <p id="error-message" class="state__detail"></p>
+   </section>
+
+
+   <!-- Audit results -->
+   <main id="state-results" class="results hidden">
+     <div id="history-banner" class="history-banner hidden" role="status">
+       <span id="history-banner-text">Viewing a saved audit</span>
+       <button type="button" id="btn-back-history" class="history-banner__link">← Back to History</button>
+     </div>
+
+
+     <section class="score-card" aria-label="UX score">
+       <div class="score-card__ring" id="score-ring">
+         <span class="score-card__value" id="score-value">—</span>
+       </div>
+       <div class="score-card__meta">
+         <p class="score-card__label">UX Score</p>
+         <p class="score-card__grade" id="score-label">—</p>
+         <div class="severity-summary" id="severity-summary"></div>
+       </div>
+     </section>
+
+
+     <section class="metrics" id="metrics" aria-label="Key metrics"></section>
+     <section class="findings" id="findings" aria-label="Audit findings"></section>
+   </main>
+
+
+   <!-- History list -->
+   <section id="state-history" class="history-panel hidden" aria-label="Audit history">
+     <div class="history-panel__toolbar">
+       <p class="history-panel__heading">Past audits</p>
+       <button type="button" id="btn-clear-history" class="btn-text btn-text--danger hidden">
+         Clear all
+       </button>
+     </div>
+     <p id="history-empty" class="history-empty hidden">No saved audits yet. Run an audit to build your history.</p>
+     <ul id="history-list" class="history-list"></ul>
+   </section>
+
+
+   <footer class="footer">
+     <button type="button" id="btn-rescan" class="btn-rescan hidden">Re-scan page</button>
+   </footer>
+
+
+   <script src="history.js"></script>
+   <script src="popup.js"></script>
+ </body>
+</html>

@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "UX Audit Lite V2",
+  "description": "A lightweight UX auditor that scans webpages and generates structured UX audit reports",
+  "version": "1.0.0",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "exclude_matches": ["*://*/popup.html"],
+      "js": [
+        "core/SignalCollector.js",
+        "core/PageClassifier.js",
+        "core/ScoreEngine.js",
+        "runtime/RuleRegistry.js",
+        "runtime/RuleEngine.js",
+        "Output/ReportBuilder.js",
+        "core/AuditEngine.js",
+        "contentScript.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ]
+}
