@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ["high", "medium", "low"].forEach((level) => {
       const div = document.createElement("div");
       div.className = "severity-item";
-      div.textContent textContent = `${level}: ${
+      div.textContent = `${level}: ${
         report.issuesBySeverity?.[level]?.length || 0
       }`;
       el.severitySummary.appendChild(div);
@@ -94,6 +94,9 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       el.historyBanner.classList.add("hidden");
     }
+    
+    showAuditPanel("results");
+    el.pageTitle.textContent = "UX Audit Lite";
   }
 
   async function runAudit() {
@@ -141,31 +144,126 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function loadHistory() {
+    const listEl = document.getElementById("history-list");
+    const emptyEl = document.getElementById("history-empty");
+    const clearBtn = document.getElementById("btn-clear-history");
+    
+    listEl.innerHTML = "";
+    
+    try {
+      const history = await UXAuditHistory.getAll();
+      if (!history || history.length === 0) {
+        emptyEl.classList.remove("hidden");
+        clearBtn.classList.add("hidden");
+        return;
+      }
+      
+      emptyEl.classList.add("hidden");
+      clearBtn.classList.remove("hidden");
+      
+      history.forEach(entry => {
+        const li = document.createElement("li");
+        li.className = "history-item";
+        
+        const content = document.createElement("div");
+        content.className = "history-item__content";
+        
+        const title = document.createElement("p");
+        title.className = "history-item__title";
+        // Just show hostname for cleaner UI
+        try {
+          title.textContent = new URL(entry.url).hostname;
+        } catch {
+          title.textContent = entry.url;
+        }
+        
+        const meta = document.createElement("p");
+        meta.className = "history-item__meta";
+        meta.textContent = `${new Date(entry.timestamp).toLocaleDateString()} • Score: ${entry.score}`;
+        
+        content.appendChild(title);
+        content.appendChild(meta);
+        
+        li.appendChild(content);
+        
+        li.addEventListener("click", () => {
+          // Make Audit tab active
+          document.querySelectorAll(".tab").forEach(t => t.classList.remove("tab--active"));
+          document.getElementById("tab-audit").classList.add("tab--active");
+          
+          renderReport(entry.report, "history");
+        });
+        
+        listEl.appendChild(li);
+      });
+    } catch (err) {
+      console.error("Failed to load history", err);
+      emptyEl.classList.remove("hidden");
+    }
+  }
+
   // Event listeners for tabs and buttons
-  document.getElementById("tab-audit").addEventListener("click", () => {
-    showAuditPanel("audit");
+  document.getElementById("tab-audit").addEventListener("click", (e) => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("tab--active"));
+    e.target.classList.add("tab--active");
+    if (el.scoreValue.textContent !== "—") {
+      showAuditPanel("results");
+    } else {
+      showAuditPanel("ready");
+    }
   });
-  document.getElementById("tab-history").addEventListener("click", () => {
+
+  document.getElementById("tab-history").addEventListener("click", async (e) => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("tab--active"));
+    e.target.classList.add("tab--active");
     showAuditPanel("history");
+    await loadHistory();
   });
-  document.getElementById("btn-back-history").addEventListener("click", () => {
-    showAuditPanel("audit");
+
+  document.getElementById("btn-back-history").addEventListener("click", async () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("tab--active"));
+    document.getElementById("tab-history").classList.add("tab--active");
+    showAuditPanel("history");
+    await loadHistory();
   });
-  document.getElementById("btn-clear-history").addEventListener("click", () => {
-    // TODO: Implement history clearing
-    UXAuditHistory.clearAll();
-    // TODO: Update history UI
+
+  document.getElementById("btn-clear-history").addEventListener("click", async () => {
+    await UXAuditHistory.clearAll();
+    await loadHistory();
   });
+
   document.getElementById("btn-rescan").addEventListener("click", () => {
-    // Re-run the audit
-    runAudit();
-  });
-  document.getElementById("btn-run-audit").addEventListener("click", () => {
     runAudit();
   });
 
-  // Show audit panel by default when popup opens
-  showAuditPanel("audit");
+  document.getElementById("btn-run-audit").addEventListener("click", () => {
+    // Make Audit tab active
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("tab--active"));
+    document.getElementById("tab-audit").classList.add("tab--active");
+    runAudit();
+  });
+
+  // Initialization: check if current URL has a recent audit
+  (async function init() {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab?.url) {
+        const history = await UXAuditHistory.getAll();
+        const existingAudit = history.find(entry => entry.url === tab.url);
+        if (existingAudit) {
+          renderReport(existingAudit.report, "history");
+        } else {
+          showAuditPanel("ready");
+        }
+      } else {
+        showAuditPanel("ready");
+      }
+    } catch (err) {
+      console.error(err);
+      showAuditPanel("ready");
+    }
+  })();
 
   // expose
   window.runAudit = runAudit;

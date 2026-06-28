@@ -17,14 +17,11 @@ if (!window.chrome || !window.chrome.runtime) {
       try {
         // Ensure UXAudit is defined
         if (!window.UXAudit || !window.UXAudit.Core) {
-          // Actually, we want to check for UXAudit.Core
-          // Let's fix the condition: if (!window.UXAudit || !window.UXAudit.Core)
-          if (!window.UXAudit || !window.UXAudit.Core) {
-            console.error("[UXAUDIT] UXAudit or UXAudit.Core not defined. Check that dependencies loaded.");
-            // Still set up the listener so we can report errors
-            window.UXAudit = window.UXAudit || {};
-            window.UXAudit.Core = window.UXAudit.Core || {};
-          }
+          console.error("[UXAUDIT] UXAudit or UXAudit.Core not defined. Check that dependencies loaded.");
+          // Still set up the listener so we can report errors
+          window.UXAudit = window.UXAudit || {};
+          window.UXAudit.Core = window.UXAudit.Core || {};
+        }
 
           chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             console.log("[UXAUDIT] contentScript received message:", request);

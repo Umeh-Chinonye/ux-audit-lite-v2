@@ -9,7 +9,8 @@
   "permissions": [
     "activeTab",
     "scripting",
-    "tabs"
+    "tabs",
+    "storage"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -27,7 +28,7 @@
         "core/ScoreEngine.js",
         "runtime/RuleRegistry.js",
         "runtime/RuleEngine.js",
-        "Output/ReportBuilder.js",
+        "output/ReportBuilder.js",
         "core/AuditEngine.js",
         "contentScript.js"
       ],
