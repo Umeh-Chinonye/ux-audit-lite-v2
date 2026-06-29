@@ -72,18 +72,50 @@ document.addEventListener("DOMContentLoaded", () => {
       const issues = report.issuesBySeverity?.[level] || [];
       if (!issues.length) return;
 
-      const h3 = document.createElement("h3");
-      h3.textContent = `${level.toUpperCase()} Issues`;
-      el.findings.appendChild(h3);
+      const section = document.createElement("section");
+      section.className = `issue-section ${level}`;
 
-      const ul = document.createElement("ul");
+      const heading = document.createElement("h3");
+      heading.textContent = `${level.toUpperCase()} Issues`;
+      section.appendChild(heading);
+
       issues.forEach((issue) => {
-        const li = document.createElement("li");
-        li.textContent = `${issue.observation} (${issue.signal})`;
-        ul.appendChild(li);
+        const article = document.createElement("article");
+        article.className = "issue";
+
+        const titleDiv = document.createElement("div");
+        titleDiv.className = "issue-title";
+        titleDiv.textContent = issue.signal
+          .replace(/([A-Z])/g, " $1")
+          .trim();
+        article.appendChild(titleDiv);
+
+        const noticed = document.createElement("div");
+        noticed.className = "issue-noticed";
+        noticed.innerHTML = `<strong>What We Noticed:</strong> ${issue.observation}`;
+        article.appendChild(noticed);
+
+        const why = document.createElement("div");
+        why.className = "issue-why";
+        why.innerHTML = `<strong>Why It Matters:</strong> ${issue.impact}`;
+        article.appendChild(why);
+
+        const rec = document.createElement("div");
+        rec.className = "issue-recommendation";
+        rec.innerHTML = `<strong>Recommendation:</strong> ${issue.recommendation}`;
+        article.appendChild(rec);
+
+        if (issue.evidence) {
+          const ev = document.createElement("div");
+          ev.className = "issue-evidence";
+          ev.innerHTML = `<strong>Evidence:</strong> ${issue.evidence}`;
+          article.appendChild(ev);
+        }
+
+        section.appendChild(article);
       });
 
-      el.findings.appendChild(ul);
+      el.findings.appendChild(section);
     });
 
     if (source !== "live") {

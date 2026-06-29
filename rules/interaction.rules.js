@@ -22,8 +22,32 @@
         'Unknown': 0
       },
       observation: value => {
-        const plural = value !== 1 ? 's' : '';
-        return `${value} interactive element${plural} lacking accessible name`;
+        const interactives = Array.from(document.querySelectorAll('button, a, input[type="button"], input[type="submit"], input[type="reset"]'))
+          .filter(el => window.UXAudit.SignalCollector.isVisible(el));
+        const unnamed = interactives.filter(el => {
+          let hasName = false;
+          const ariaLabel = el.getAttribute('aria-label');
+          const ariaLabelledby = el.getAttribute('aria-labelledby');
+          const innerText = el.textContent.trim();
+          if (ariaLabel && ariaLabel.trim() !== '') hasName = true;
+          if (ariaLabelledby && ariaLabelledby.trim() !== '') hasName = true;
+          if (innerText.length > 0) hasName = true;
+          if (el.tagName === 'INPUT') {
+            const value = el.value.trim();
+            const placeholder = el.getAttribute('placeholder')?.trim() || '';
+            if (value.length > 0 || placeholder.length > 0) hasName = true;
+          }
+          return !hasName;
+        });
+        if (unnamed.length === 0) return 'All interactive elements have accessible names';
+        const details = unnamed.map(el => {
+          const tag = el.tagName.toLowerCase();
+          const text = el.textContent.trim();
+          const aria = el.getAttribute('aria-label') || '';
+          const label = aria ? `aria-label="${aria}"` : (text ? `text="${text}"` : '(no visible text or aria-label)');
+          return `<${tag} ${label}>`;
+        });
+        return `${unnamed.length} interactive element${unnamed.length !== 1 ? 's' : ''} lacking accessible name: ${details.join(', ')}`;
       },
       impact: (pageType, value) => {
         if (value === 0) return '';
@@ -79,9 +103,25 @@
         'Unknown': 0
       },
       observation: value => {
-        const plural = value !== 1 ? 's' : '';
-        return `${value} element${plural} appears clickable but is not a native interactive element`;
-      },
+        const selectors = [
+          'div[onclick]', 'span[onclick]', 'p[onclick]', 'li[onclick]',
+          'div[style*="cursor: pointer"]', 'span[style*="cursor: pointer"]',
+          'p[style*="cursor: pointer"]', 'li[style*="cursor: pointer"]',
+          'div[style*="cursor:hand"]', 'span[style*="cursor:hand"]',
+          'p[style*="cursor:hand"]', 'li[style*="cursor:hand"]'
+        ];
+        const elements = [];
+        selectors.forEach(sel => {
+          Array.from(document.querySelectorAll(sel))
+            .filter(el => window.UXAudit.SignalCollector.isVisible(el))
+            .forEach(el => {
+              if (el.tagName !== 'BUTTON' && el.tagName !== 'A' &&
+                  !(el.tagName !(el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(el.type )) )) {?s
+r
+}});};
+
+}}
+```
       impact: (pageType, value) => {
         if (value === 0) return '';
         const impacts = {

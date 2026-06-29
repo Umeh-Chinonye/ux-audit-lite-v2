@@ -22,10 +22,18 @@
         'Unknown': 0
       },
       observation: value => {
-        const h1c = document.querySelectorAll('h1').length;
-        if (h1c === 0) return 'Missing H1 heading';
-        if (h1c > 1) return `Multiple H1 headings (${h1c})`;
-        return '';
+        const h1s = Array.from(document.querySelectorAll('h1'))
+          .filter(el => window.UXAudit.SignalCollector.isVisible(el));
+        if (h1s.length === 0) {
+          return 'Missing H1 heading';
+        }
+        if (h1s.length > 1) {
+          const texts = h1s.map(el => `"${el.textContent.trim()}"`);
+          return `Multiple H1 headings: ${texts.join(', ')}`;
+        }
+        // Exactly one H1
+        const text = h1s[0].textContent.trim();
+        return `H1 heading: "${text}"`;
       },
       impact: (pageType, value) => {
         if (value === 0) return '';
@@ -81,7 +89,21 @@
         'Authentication Flow': 0,
         'Unknown': 0
       },
-      observation: value => `${value} heading level skip${value === 1 ? '' : 's'}`,
+      observation: value => {
+        const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6'))
+          .filter(el => window.UXAudit.SignalCollector.isVisible(el));
+        const skipInfo = [];
+        let prevLevel = 0;
+        headings.forEach(h => {
+          const level = parseInt(h.tagName.substring(1));
+          if (prevLevel > 0 && level > prevLevel + 1) {
+            skipInfo.push(`${h.tagName}: "${h.textContent.trim()}" (skipped from H${prevLevel} to H${level})`);
+          }
+          prevLevel = level;
+        });
+        if (skipInfo.length === 0) return 'No heading level skips';
+        return `Heading level skips: ${skipInfo.join('; ')}`;
+      },
       impact: (pageType, value) => {
         if (value === 0) return '';
         const impacts = {

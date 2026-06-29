@@ -23,8 +23,16 @@
         'Unknown': 0
       },
       observation: value => {
-        const plural = value !== 1 ? 's' : '';
-        return `${value} image${plural} missing alternative text`;
+        const images = Array.from(document.querySelectorAll('img:not([alt]), img[alt=""]'))
+          .filter(el => window.UXAudit.SignalCollector.isVisible(el));
+        if (images.length === 0) return 'No images missing alt text';
+        const details = images.map(img => {
+          const src = img.getAttribute('src') || '';
+          const alt = img.getAttribute('alt') || '';
+          const desc = src ? `src="${src}"` : '(no src)';
+          return `<img ${desc}>`;
+        });
+        return `${images.length} image${images.length !== 1 ? 's' : ''} missing alternative text: ${details.join(', ')}`;
       },
       impact: (pageType, value) => {
         if (value === 0) return '';
@@ -65,8 +73,35 @@
         'Unknown': 0
       },
       observation: value => {
-        const plural = value !== 1 ? 's' : '';
-        return `${value} form field${plural} missing accessible label`;
+        const fields = Array.from(document.querySelectorAll('input, textarea, select'))
+          .filter(el => window.UXAudit.SignalCollector.isVisible(el));
+        const unlabeled = fields.filter(field => {
+          const id = field.id;
+          let labeled = false;
+          if (id) {
+            const label = document.querySelector(`label[for="${id}"]`);
+            if (label) labeled = true;
+          }
+          if (!labeled) {
+            if (field.getAttribute('aria-label')?.trim() !== '' ||
+                field.getAttribute('aria-labelledby')?.trim() !== '') {
+              labeled = true;
+            }
+          }
+          if (!labeled) {
+            if (field.closest('label')) labeled = true;
+          }
+          return !labeled;
+        });
+        if (unlabeled.length === 0) return 'All form fields have accessible labels';
+        const details = unlabeled.map(f => {
+          const placeholder = f.getAttribute('placeholder') || '';
+          const name = f.getAttribute('name') || '';
+          const type = f.type || f.tagName.toLowerCase();
+          const info = placeholder ? `placeholder="${placeholder}"` : name ? `name="${name}"` : '';
+          return `<${type} ${info}>`;
+        });
+        return `${unlabeled.length} form field${unlabeled.length !== 1 ? 's' : ''} missing accessible label: ${details.join(', ')}`;
       },
       impact: (pageType, value) => {
         if (value === 0) return '';
